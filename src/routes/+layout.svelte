@@ -27,9 +27,10 @@
 		defaultOptions: {
 			queries: {
 				enabled: browser,
-				staleTime: 1000 * 60 * 5, // 5 minutes - data is fresh for 5 minutes
+				staleTime: 0, // Data is immediately stale - will refetch when needed
 				gcTime: 1000 * 60 * 10, // 10 minutes - cache garbage collection time (formerly cacheTime)
-				refetchOnWindowFocus: false, // Don't refetch on window focus
+				refetchOnWindowFocus: true, // Refetch when window regains focus to see updates from other clients
+				refetchOnMount: true, // Always refetch on mount to get latest data
 				retry: 1, // Retry failed requests once
 			},
 			mutations: {

@@ -6,7 +6,7 @@
   console.log("data", data);
   const queryClient = useQueryClient();
 
-  // Query to fetch todos
+  // Query to fetch todos with proper revalidation
   const todosQuery = createQuery(() => ({
     queryKey: ['todos'],
     queryFn: async () => {
@@ -15,7 +15,10 @@
       return response.json();
     },
     initialData: data.todos,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 0, // Data is immediately stale - will refetch when needed
+    refetchOnWindowFocus: true, // Refetch when window regains focus to see updates from other clients
+    refetchOnMount: true, // Always refetch on mount to get latest data
+    refetchInterval: 1000, // Refetch every 5 seconds to see updates from other clients
   }));
 
   // Use $derived to make todos reactive - this ensures Svelte 5 reactivity
@@ -69,13 +72,15 @@
         queryClient.setQueryData(['todos'], context.previousTodos);
       }
     },
-    // Update cache with server response on success
+    // Update cache with server response on success and invalidate to refetch
     onSuccess: (newTodo) => {
       queryClient.setQueryData(['todos'], (old: any) => {
         if (!old) return [newTodo];
         // Replace optimistic todo with real one from server
         return [newTodo, ...old.filter((todo: any) => !todo.id.startsWith('temp-'))];
       });
+      // Invalidate and refetch to ensure consistency with server
+      queryClient.invalidateQueries({ queryKey: ['todos'], refetchType: 'active' });
     },
   }));
 
@@ -114,12 +119,14 @@
         queryClient.setQueryData(['todos'], context.previousTodos);
       }
     },
-    // Update cache with server response on success
+    // Update cache with server response on success and invalidate to refetch
     onSuccess: (updatedTodo) => {
       queryClient.setQueryData(['todos'], (old: any) => {
         if (!old) return [updatedTodo];
         return old.map((todo: any) => (todo.id === updatedTodo.id ? updatedTodo : todo));
       });
+      // Invalidate and refetch to ensure consistency with server
+      queryClient.invalidateQueries({ queryKey: ['todos'], refetchType: 'active' });
     },
   }));
 
@@ -154,10 +161,10 @@
         queryClient.setQueryData(['todos'], context.previousTodos);
       }
     },
-    // No need to update cache on success since we already removed it optimistically
+    // Invalidate and refetch on success to ensure consistency
     onSuccess: () => {
-      // Mark as invalid but don't refetch
-      queryClient.invalidateQueries({ queryKey: ['todos'], refetchType: 'none' });
+      // Invalidate and refetch to get latest data from server
+      queryClient.invalidateQueries({ queryKey: ['todos'], refetchType: 'active' });
     },
   }));
 
