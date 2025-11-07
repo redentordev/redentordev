@@ -6,6 +6,14 @@ const config = {
   preprocess: vitePreprocess(),
   kit: {
     adapter: alchemy(),
+    experimental: {
+      remoteFunctions: true,
+    },
+  },
+  compilerOptions: {
+    experimental: {
+      async: true,
+    },
   },
 };
 
