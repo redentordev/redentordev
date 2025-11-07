@@ -11,7 +11,7 @@ declare global {
         name: string;
         email: string;
         emailVerified: boolean;
-        image?: string;
+        image?: string | null;
         createdAt: Date;
         updatedAt: Date;
       };
@@ -21,8 +21,8 @@ declare global {
         token: string;
         createdAt: Date;
         updatedAt: Date;
-        ipAddress?: string;
-        userAgent?: string;
+        ipAddress?: string | null;
+        userAgent?: string | null;
         userId: string;
       };
     }

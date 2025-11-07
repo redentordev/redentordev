@@ -5,7 +5,19 @@ import { getAuth } from "$lib/server/auth";
 
 export const GET: RequestHandler = async ({ platform, request }) => {
   const db = getDb(platform!.env.DB);
-  const auth = getAuth(db);
+
+  // Ensure BASE_URL is set - use request URL as fallback
+  const baseURL =
+    platform!.env.BASE_URL ||
+    new URL(request.url).origin ||
+    "http://localhost:5173";
+
+  const auth = getAuth(db, {
+    BASE_URL: baseURL,
+    TELEGRAM_WEBHOOK_URL: platform!.env.TELEGRAM_WEBHOOK_URL,
+    TELEGRAM_API_KEY: platform!.env.TELEGRAM_API_KEY,
+    ALLOWED_EMAIL: platform!.env.ALLOWED_EMAIL,
+  });
 
   // Check authentication
   const session = await auth.api.getSession({

@@ -6,24 +6,30 @@ import { createAuthMiddleware, APIError } from "better-auth/api";
 import { getRequestEvent } from "$app/server";
 import { getDb } from "./db";
 
-// Your allowed email - only this email can sign in
-const ALLOWED_EMAIL = "valerioreden@gmail.com";
-
 // This will be initialized with the actual DB binding at runtime
-let authInstance: ReturnType<typeof betterAuth> | null = null;
-
-export function getAuth(db: ReturnType<typeof getDb>) {
-  // Return cached instance if it exists
-  if (authInstance) {
-    return authInstance;
+// Don't cache the auth instance since BASE_URL and other env vars may change
+export function getAuth(
+  db: ReturnType<typeof getDb>,
+  env: {
+    TELEGRAM_WEBHOOK_URL: string;
+    TELEGRAM_API_KEY: string;
+    ALLOWED_EMAIL: string;
+    BASE_URL: string;
   }
+) {
+  const { TELEGRAM_WEBHOOK_URL, TELEGRAM_API_KEY, ALLOWED_EMAIL, BASE_URL } =
+    env;
 
-  authInstance = betterAuth({
+  // Ensure BASE_URL doesn't have trailing slash
+  const baseURL = BASE_URL?.replace(/\/$/, "") || "http://localhost:5173";
+
+  return betterAuth({
+    baseURL: baseURL,
     database: drizzleAdapter(db, {
       provider: "sqlite",
     }),
     emailAndPassword: {
-      enabled: true,
+      enabled: false,
     },
     plugins: [
       magicLink({
@@ -46,11 +52,11 @@ Token: ${token}
           try {
             const message = `🔐 Magic Link Sign In\n\nEmail: ${email}\n\nClick to sign in:\n${url}\n\nExpires in 5 minutes`;
 
-            await fetch("https://n8n.redentor.dev/webhook/notify-me", {
+            await fetch(TELEGRAM_WEBHOOK_URL, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
-                "tg-notify-api-key": "OvA6ByQiCv8khX",
+                "tg-notify-api-key": TELEGRAM_API_KEY,
               },
               body: JSON.stringify({
                 message: message,
@@ -64,7 +70,7 @@ Token: ${token}
           }
         },
         expiresIn: 300, // 5 minutes
-        disableSignUp: true, // Prevent new signups via magic link
+        disableSignUp: false, // Allow new users to sign up via magic link
       }),
       sveltekitCookies(getRequestEvent),
     ],
@@ -87,6 +93,4 @@ Token: ${token}
       }),
     },
   });
-
-  return authInstance;
 }
