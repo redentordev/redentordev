@@ -2,7 +2,8 @@
   import { createQuery, createMutation, useQueryClient } from '@tanstack/svelte-query';
   import { authClient } from '$lib/auth-client';
 
-  const data = $props();
+  let { data } = $props();
+  console.log("data", data);
   const queryClient = useQueryClient();
 
   // Query to fetch todos
@@ -165,7 +166,7 @@
     window.location.href = '/';
   }
 
-  async function handleCreateTodo(e: SubmitEvent) {
+  function handleCreateTodo(e: SubmitEvent) {
     e.preventDefault();
     const form = e.currentTarget as HTMLFormElement;
     const formData = new FormData(form);
@@ -173,28 +174,35 @@
 
     if (!title) return;
 
-    try {
-      await createTodoMutation.mutateAsync(title);
-      form.reset();
-    } catch (error) {
-      console.error('Failed to create todo:', error);
-    }
+    // Reset form immediately - optimistic update will show the todo right away
+    form.reset();
+
+    // Use mutate() instead of mutateAsync() - non-blocking, fire-and-forget
+    createTodoMutation.mutate(title, {
+      onError: (error) => {
+        console.error('Failed to create todo:', error);
+        // Optionally restore the form value on error
+        // form.querySelector('input[name="title"]').value = title;
+      },
+    });
   }
 
-  async function handleToggle(id: string) {
-    try {
-      await toggleTodoMutation.mutateAsync(id);
-    } catch (error) {
-      console.error('Failed to toggle todo:', error);
-    }
+  function handleToggle(id: string) {
+    // Use mutate() instead of mutateAsync() - non-blocking
+    toggleTodoMutation.mutate(id, {
+      onError: (error) => {
+        console.error('Failed to toggle todo:', error);
+      },
+    });
   }
 
-  async function handleDelete(id: string) {
-    try {
-      await deleteTodoMutation.mutateAsync(id);
-    } catch (error) {
-      console.error('Failed to delete todo:', error);
-    }
+  function handleDelete(id: string) {
+    // Use mutate() instead of mutateAsync() - non-blocking
+    deleteTodoMutation.mutate(id, {
+      onError: (error) => {
+        console.error('Failed to delete todo:', error);
+      },
+    });
   }
 </script>
 
@@ -205,7 +213,7 @@
       <div class="flex items-center justify-between mb-4">
         <div>
           <h1 class="text-3xl font-bold text-gray-900">My Todos</h1>
-          <p class="text-sm text-gray-500 mt-1">Welcome, {data.user?.email}</p>
+          <p class="text-sm text-gray-500 mt-1">Welcome, {data.user.email}</p>
         </div>
         <button
           onclick={handleSignOut}
@@ -223,16 +231,14 @@
             name="title"
             placeholder="Add a new todo..."
             required
-            disabled={createTodoMutation.isPending}
-            class="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+            class="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
           />
         </label>
         <button
           type="submit"
-          disabled={createTodoMutation.isPending}
-          class="px-6 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-gray-400 disabled:cursor-not-allowed"
+          class="px-6 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
         >
-          {createTodoMutation.isPending ? 'Adding...' : 'Add'}
+          Add
         </button>
       </form>
       
@@ -261,8 +267,7 @@
                 <!-- Toggle Checkbox -->
                 <button
                   onclick={() => handleToggle(todo.id)}
-                  disabled={toggleTodoMutation.isPending}
-                  class="w-5 h-5 rounded border-2 flex items-center justify-center transition-colors disabled:opacity-50 {todo.completed
+                  class="w-5 h-5 rounded border-2 flex items-center justify-center transition-colors {todo.completed
                     ? 'bg-indigo-600 border-indigo-600'
                     : 'border-gray-300 hover:border-indigo-400'}"
                   aria-label={todo.completed ? 'Mark as incomplete' : 'Mark as complete'}
@@ -286,8 +291,7 @@
                 <!-- Delete Button -->
                 <button
                   onclick={() => handleDelete(todo.id)}
-                  disabled={deleteTodoMutation.isPending}
-                  class="text-red-600 hover:text-red-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 rounded p-1 disabled:opacity-50"
+                  class="text-red-600 hover:text-red-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 rounded p-1"
                   aria-label="Delete todo"
                 >
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
