@@ -33,7 +33,16 @@ export function getAuth(
     },
     plugins: [
       magicLink({
-        sendMagicLink: async ({ email, url, token }) => {
+        sendMagicLink: async ({ email, url, token }, request) => {
+          // Parse the original URL to extract query parameters
+          const originalUrl = new URL(url);
+          const callbackURL =
+            originalUrl.searchParams.get("callbackURL") || "/todos";
+
+          // Create a custom URL that points to our SvelteKit page route
+          // This ensures proper server-side handling without client-side routing issues
+          const customUrl = `${baseURL}/auth/verify-magic-link?token=${token}&callbackURL=${encodeURIComponent(callbackURL)}`;
+
           // Log to console for debugging
           console.log(`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -41,7 +50,7 @@ export function getAuth(
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Click this link to sign in:
-${url}
+${customUrl}
 
 Token: ${token}
 
@@ -50,7 +59,7 @@ Token: ${token}
 
           // Send notification to Telegram via n8n webhook
           try {
-            const message = `🔐 Magic Link Sign In\n\nEmail: ${email}\n\nClick to sign in:\n${url}\n\nExpires in 5 minutes`;
+            const message = `🔐 Magic Link Sign In\n\nEmail: ${email}\n\nClick to sign in:\n${customUrl}\n\nExpires in 5 minutes`;
 
             await fetch(TELEGRAM_WEBHOOK_URL, {
               method: "POST",

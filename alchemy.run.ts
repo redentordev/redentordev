@@ -12,7 +12,6 @@ const app = await alchemy("redentordev", {
 export const database = await D1Database(`sqlite`, {
   name: `${app.name}-${app.stage}-database`,
   migrationsDir: "./migrations",
-  adopt: true,
 });
 
 export const worker = await SvelteKit(`site`, {
