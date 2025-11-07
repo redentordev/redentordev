@@ -72,6 +72,7 @@ Token: ${token}
         expiresIn: 300, // 5 minutes
         disableSignUp: false, // Allow new users to sign up via magic link
       }),
+      // sveltekitCookies must be the last plugin in the array
       sveltekitCookies(getRequestEvent),
     ],
     hooks: {

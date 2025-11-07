@@ -28,25 +28,35 @@ export const handle: Handle = async ({ event, resolve }) => {
   console.log(`[HOOK] BASE_URL: ${baseURL}`);
   console.log(`[HOOK] Auth baseURL: ${auth.options.baseURL}`);
 
-  // Handle Better Auth routes - this intercepts /api/auth/* routes
+  // Handle Better Auth routes - svelteKitHandler intercepts /api/auth/* routes
   // For non-auth routes, it calls resolve internally
-  return svelteKitHandler({
-    event,
-    resolve: async (event) => {
-      // Fetch current session from Better Auth for non-auth routes
-      const session = await auth.api.getSession({
-        headers: event.request.headers,
-      });
+  try {
+    const response = await svelteKitHandler({
+      event,
+      resolve: async (event) => {
+        // Fetch current session from Better Auth for non-auth routes
+        const session = await auth.api.getSession({
+          headers: event.request.headers,
+        });
 
-      // Make session and user available on server
-      if (session) {
-        event.locals.session = session.session;
-        event.locals.user = session.user;
-      }
+        // Make session and user available on server
+        if (session) {
+          event.locals.session = session.session;
+          event.locals.user = session.user;
+        }
 
-      return resolve(event);
-    },
-    auth,
-    building,
-  });
+        return resolve(event);
+      },
+      auth,
+      building,
+    });
+
+    console.log(`[HOOK] svelteKitHandler returned status: ${response.status}`);
+    return response;
+  } catch (error) {
+    console.error(`[HOOK] svelteKitHandler error:`, error);
+    // If svelteKitHandler fails, fall through to normal resolve
+    // This allows the route handler to potentially catch it
+    return resolve(event);
+  }
 };
