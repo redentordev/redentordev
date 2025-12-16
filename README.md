@@ -56,5 +56,5 @@ Full-Stack Engineer based in the Philippines. Building web apps, DevOps tools, a
 ---
 
 [![Website](https://img.shields.io/badge/redentor.dev-000000?style=flat-square&logo=safari&logoColor=white)](https://redentor.dev)
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=flat-square&logo=linkedin&logoColor=white)](https://linkedin.com/in/redentordev)
-[![X](https://img.shields.io/badge/X-000000?style=flat-square&logo=x&logoColor=white)](https://x.com/redentordev)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=flat-square&logo=linkedin&logoColor=white)](https://linkedin.com/in/redenvalerio)
+[![X](https://img.shields.io/badge/X-000000?style=flat-square&logo=x&logoColor=white)](https://x.com/redentor_dev)
